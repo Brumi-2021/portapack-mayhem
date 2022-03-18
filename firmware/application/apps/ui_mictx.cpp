@@ -147,8 +147,20 @@ void MicTXView::rxaudio(bool is_on) {
 	if (is_on) {
 		audio::input::stop();
 		baseband::shutdown();
-		baseband::run_image(portapack::spi_flash::image_tag_nfm_audio);
-		receiver_model.set_modulation(ReceiverModel::Mode::NarrowbandFMAudio);
+		
+		if (enable_am || enable_usb || enable_lsb || enable_dsb) {
+			baseband::run_image(portapack::spi_flash::image_tag_am_audio);
+			receiver_model.set_modulation(ReceiverModel::Mode::AMAudio);	
+			if (options_mode.selected_index() < 4)
+				receiver_model.set_am_configuration(options_mode.selected_index() - 1);
+			else
+				receiver_model.set_am_configuration(0);
+		}
+		else {
+			baseband::run_image(portapack::spi_flash::image_tag_nfm_audio);
+			receiver_model.set_modulation(ReceiverModel::Mode::NarrowbandFMAudio);
+			
+		}
 		receiver_model.set_sampling_rate(3072000);
 		receiver_model.set_baseband_bandwidth(1750000);	
 //		receiver_model.set_tuning_frequency(field_frequency.value()); //probably this too can be commented out.
@@ -159,15 +171,15 @@ void MicTXView::rxaudio(bool is_on) {
 		receiver_model.enable();
 		audio::output::start();
 	} else {	//These incredibly convoluted steps are required for the vumeter to reappear when stopping RX.
+		receiver_model.set_modulation(ReceiverModel::Mode::NarrowbandFMAudio); //This fixes something with AM RX...
 		receiver_model.disable();
 		baseband::shutdown();
+
 		baseband::run_image(portapack::spi_flash::image_tag_mic_tx);
-		audio::input::start();
-//		transmitter_model.enable();		
+		audio::output::stop();
+		audio::input::start();	
 		portapack::pin_i2s0_rx_sda.mode(3);
-//		transmitting = false;
 		configure_baseband();
-//		transmitter_model.disable();
 	}
 }
 
