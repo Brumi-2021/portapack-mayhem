@@ -71,6 +71,7 @@ void MicTXView::configure_baseband() {
 		enable_usb,
 		enable_lsb
 	);
+
 }
 
 void MicTXView::set_tx(bool enable) {
@@ -280,6 +281,42 @@ MicTXView::MicTXView(
 	};
 	field_rfamp.set_value(rf_amp ? 14 : 0);
 	
+	options_mode.on_change = [this](size_t, int32_t v) {
+		enable_am = false;
+		enable_usb = false;
+		enable_lsb = false;
+		enable_dsb = false;
+		switch(v) {
+			case 0:
+				enable_am = false;
+				enable_usb = false;
+				enable_lsb = false;
+				enable_dsb = false;
+				field_bw.set_value(transmitter_model.channel_bandwidth() / 1000);
+				//if (rx_enabled)
+				rxaudio(rx_enabled); //Update now if we have RX audio on
+				break;
+			case 1:
+				enable_am = true;
+				rxaudio(rx_enabled); //Update now if we have RX audio on
+				break;
+			case 2:
+				enable_usb = true;
+				rxaudio(rx_enabled); //Update now if we have RX audio on
+				break;
+			case 3:
+				enable_lsb = true;
+				rxaudio(rx_enabled); //Update now if we have RX audio on
+				break;
+			case 4:
+				enable_dsb = true;
+				rxaudio(rx_enabled); //Update now if we have RX audio on
+				break;
+		}
+		//configure_baseband();
+	};
+	
+	
 	/*
 	check_va.on_select = [this](Checkbox&, bool v) {
 		va_enabled = v;
@@ -348,6 +385,21 @@ MicTXView::MicTXView(
 
 	field_volume.set_value((receiver_model.headphone_volume() - audio::headphone::volume_range().max).decibel() + 99);
 	field_volume.on_change = [this](int32_t v) { this->on_headphone_volume_changed(v);	};
+
+	field_rxbw.on_change = [this](size_t, int32_t v) {
+		switch(v) {
+			case 0:
+				receiver_model.set_nbfm_configuration(0);
+				break;
+			case 1:
+				receiver_model.set_nbfm_configuration(1);
+				break;
+			case 2:
+				receiver_model.set_nbfm_configuration(2);
+				break;
+		}
+	};
+	field_rxbw.set_selected_index(2);
 
 	field_squelch.on_change = [this](int32_t v) { 
 		receiver_model.set_squelch_level(100 - v);	
