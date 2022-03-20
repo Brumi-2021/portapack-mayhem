@@ -99,42 +99,16 @@ void MicTXProcessor::on_message(const Message* const msg) {
 	
 	switch(msg->id) {
 		case Message::ID::AudioTXConfig:
-			fm_delta = config_message.deviation_hz * (0xFFFFFFUL / baseband_fs);
-			
-			audio_gain = config_message.audio_gain;
-			divider = config_message.divider;
-			power_acc_count = 0;
-			
-			tone_gen.configure(config_message.tone_key_delta, config_message.tone_key_mix_weight);
-			
-			txprogress_message.done = true;
-
-			play_beep = false;
-			configured = true;
-			break;
-		
-		case Message::ID::RequestSignal:
-			if (request_message.signal == RequestSignalMessage::Signal::BeepRequest) {
-				beep_index = 0;
-				beep_timer = 0;
-				play_beep = true;
-			}
-			break;
-
-		default:
-			break;
-	}
-
-	/*
-	switch(msg->id) {
-		case Message::ID::AudioTXConfig:
 			if (fm_enabled) {
-				dsp::modulate::FM *fm = new dsp::modulate::FM();
-				
-				fm->set_fm_delta(config_message.deviation_hz * (0xFFFFFFUL / baseband_fs));
-				modulator = fm;
-			}
+				fm_delta = config_message.deviation_hz * (0xFFFFFFUL / baseband_fs);
 			
+				 dsp::modulate::FM *fm = new dsp::modulate::FM();
+				 fm->set_fm_delta(config_message.deviation_hz * (0xFFFFFFUL / baseband_fs));
+		
+				modulator = fm;
+
+			}
+
 			if (usb_enabled) {
 				modulator = new dsp::modulate::SSB();
 				modulator->set_mode(dsp::modulate::Mode::USB);
@@ -153,7 +127,7 @@ void MicTXProcessor::on_message(const Message* const msg) {
 				modulator->set_mode(dsp::modulate::Mode::DSB);
 			}
 
-            modulator->set_over(baseband_fs / 24000);
+			// modulator->set_over(baseband_fs / 24000);
 			
 			am_enabled = config_message.am_enabled;
 			usb_enabled = config_message.usb_enabled;
@@ -185,7 +159,7 @@ void MicTXProcessor::on_message(const Message* const msg) {
 
 		default:
 			break;
-	} */
+	}
 }
 
 int main() {
