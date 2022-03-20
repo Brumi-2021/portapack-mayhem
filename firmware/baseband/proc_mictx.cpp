@@ -35,7 +35,7 @@ void MicTXProcessor::execute(const buffer_c8_t& buffer){
 	if (!configured) return;
 	
 	audio_input.read_audio_buffer(audio_buffer);
-	modulator->execute(audio_buffer, buffer);
+	// modulator->execute(audio_buffer, buffer);
 
 	for (size_t i = 0; i < buffer.count; i++) {
 		
@@ -71,7 +71,7 @@ void MicTXProcessor::execute(const buffer_c8_t& buffer){
 			sample = beep_gen.process(0);
 		}
 		
-		/*
+		
 		sample = tone_gen.process(sample);
 		
 		// FM
@@ -89,7 +89,7 @@ void MicTXProcessor::execute(const buffer_c8_t& buffer){
 		}
 		
 		buffer.p[i] = { re, im };
-		*/
+		
 	}
 }
 
@@ -97,6 +97,35 @@ void MicTXProcessor::on_message(const Message* const msg) {
 	const AudioTXConfigMessage config_message = *reinterpret_cast<const AudioTXConfigMessage*>(msg);
 	const RequestSignalMessage request_message = *reinterpret_cast<const RequestSignalMessage*>(msg);
 	
+	switch(msg->id) {
+		case Message::ID::AudioTXConfig:
+			fm_delta = config_message.deviation_hz * (0xFFFFFFUL / baseband_fs);
+			
+			audio_gain = config_message.audio_gain;
+			divider = config_message.divider;
+			power_acc_count = 0;
+			
+			tone_gen.configure(config_message.tone_key_delta, config_message.tone_key_mix_weight);
+			
+			txprogress_message.done = true;
+
+			play_beep = false;
+			configured = true;
+			break;
+		
+		case Message::ID::RequestSignal:
+			if (request_message.signal == RequestSignalMessage::Signal::BeepRequest) {
+				beep_index = 0;
+				beep_timer = 0;
+				play_beep = true;
+			}
+			break;
+
+		default:
+			break;
+	}
+
+	/*
 	switch(msg->id) {
 		case Message::ID::AudioTXConfig:
 			if (fm_enabled) {
@@ -156,7 +185,7 @@ void MicTXProcessor::on_message(const Message* const msg) {
 
 		default:
 			break;
-	}
+	} */
 }
 
 int main() {
