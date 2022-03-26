@@ -118,8 +118,8 @@ private:
 		{ {12 * 8, 10 * 8 }, "ATT:", Color::light_grey() },
 		{ {20 * 8, 10 * 8 }, "DEC:", Color::light_grey() },
 		{ { 4 * 8, ( 13 * 8 ) - 2 }, "TONE KEY:", Color::light_grey() },
-		{ { 9 * 8, 23 * 8 }, "VOL:", Color::light_grey() },
-		{ {17 * 8, 23 * 8 }, "FM RXBW:", Color::light_grey() },
+		{ { 7 * 8, 23 * 8 }, "VOL:", Color::light_grey() },
+		{ {15 * 8, 23 * 8 }, "FM RXBW:", Color::light_grey() },
 		{ {17 * 8, 25 * 8 }, "SQ:", Color::light_grey() },
 		{ { 5 * 8, 25 * 8 }, "F:", Color::light_grey() },
 		{ { 5 * 8, 27 * 8 }, "LNA:", Color::light_grey()},
@@ -244,7 +244,7 @@ private:
 	};
 
 	NumberField field_volume {
-		{ 13 * 8, 23 * 8 },
+		{ 11 * 8, 23 * 8 },
 		2,
 		{ 0, 99 },
 		1,
@@ -252,7 +252,7 @@ private:
 	};
 	
 	OptionsField field_rxbw {
-	       { 25 * 8, 23 * 8},
+	       { 23 * 8, 23 * 8},
 	       3,
 	       {
 	       		{"8k5", 0},

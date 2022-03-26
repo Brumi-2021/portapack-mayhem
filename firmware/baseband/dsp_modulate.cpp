@@ -88,15 +88,21 @@ void FM::set_fm_delta(uint32_t new_delta) {
 	fm_delta = new_delta;
 }
 
+void FM::set_tone_gen_configure(const uint32_t set_delta, const float set_tone_mix_weight) {
+	 tone_gen.configure(set_delta, set_tone_mix_weight); // we configure private object of dsp_modulate.cpp
+}	
+
 void FM::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 	int32_t		sample = 0;
 	int8_t		re, im;
 
 	for (size_t counter = 0; counter < buffer.count; counter++) {
-		if (counter % over == 0) {
-		    sample = audio.p[counter / over] >> 8;
-		    delta = sample * fm_delta;
-		}
+		// if (counter % over == 0) {
+		sample = audio.p[counter>>6] >> 8;  // audio samples was fs 24Khz, and 16 bits
+		
+		sample = tone_gen.process(sample);      // atomic sample mix addition , considering a tone replayed at 1,536Mhz.
+	    delta = sample * fm_delta;
+		// }
 
 		phase += delta;
 		sphase = phase >> 24;
@@ -115,7 +121,7 @@ AM::AM() {
 void AM::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 	int32_t         sample = 0;
 	int8_t          re = 0, im = 0;
-	float		q = 0.0;
+	float			q = 0.0;
 	
 	for (size_t counter = 0; counter < buffer.count; counter++) {
 		if (counter % 128 == 0) {
