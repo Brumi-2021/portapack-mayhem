@@ -62,8 +62,8 @@ void SSB::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 				//default:	break;
 			//}
 
-			i *= 64.0f;
-			q *= 64.0f;
+			i *= 256.0f;   // Original 64.0f,  now x 4 (+12 dB's SSB BB modulation)	
+			q *= 256.0f;   // Original 64.0f,  now x 4 (+12 dB's SSB BB modulation)	
 			switch (mode) {
 				case Mode::LSB:	re = q;	im = i;	break;
 				case Mode::USB:	re = i;	im = q;	break;
@@ -88,15 +88,19 @@ void FM::set_fm_delta(uint32_t new_delta) {
 	fm_delta = new_delta;
 }
 
+void FM::set_tone_gen_configure(const uint32_t set_delta, const float set_tone_mix_weight) {
+	 tone_gen.configure(set_delta, set_tone_mix_weight);
+}	
+
 void FM::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 	int32_t		sample = 0;
 	int8_t		re, im;
 
 	for (size_t counter = 0; counter < buffer.count; counter++) {
-		if (counter % over == 0) {
-		    sample = audio.p[counter / over] >> 8;
-		    delta = sample * fm_delta;
-		}
+	    sample = audio.p[counter / over] >> 8;
+	
+		sample = tone_gen.process(sample);
+	    delta = sample * fm_delta;
 
 		phase += delta;
 		sphase = phase >> 24;
@@ -114,7 +118,7 @@ AM::AM() {
 
 void AM::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 	int32_t         sample = 0;
-	int8_t          re, im;
+	int8_t          re = 0, im = 0;
 	float		q = 0.0;
 	
 	for (size_t counter = 0; counter < buffer.count; counter++) {
@@ -123,10 +127,10 @@ void AM::execute(const buffer_s16_t& audio, const buffer_c8_t& buffer) {
 		}
 
 		q = sample / 32768.0f;
-		q *= 64.0f;
+		q *= 256.0f;										 // Original 64.0f,now x4 (+12 dB's BB_modulation in AM & DSB)	
 		switch (mode) {
-			case Mode::AM:	re = q + 20; im = q + 20;
-			case Mode::DSB:	re = q; im = q;
+			case Mode::AM:	re = q + 80; im = q + 80; break; // Original DC add +20_DC_level=carrier,now x4 (+12dB's AM carrier)
+			case Mode::DSB:	re = q; im = q; break;
 			default:	break;
 		}
 		buffer.p[counter] = { re, im };
